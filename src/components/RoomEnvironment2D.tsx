@@ -9,185 +9,219 @@ export const RoomEnvironment2D: React.FC = () => {
   const plantRef = useRef<HTMLDivElement>(null);
   const dustParticlesRef = useRef<HTMLDivElement>(null);
 
-  // Hiệu ứng GSAP cho đèn dầu đung đưa và các hạt bụi nắng/đom đóm
+  // Hiệu ứng GSAP cho đèn dầu đung đưa, ánh sáng bập bùng và bụi nắng/đom đóm
   useEffect(() => {
     // Đèn dầu đung đưa tự nhiên
     if (lanternRef.current) {
       gsap.to(lanternRef.current, {
-        rotation: 4,
+        rotation: 3.5,
         transformOrigin: 'top center',
-        duration: 3.2,
+        duration: 3.4,
         ease: 'sine.inOut',
         yoyo: true,
         repeat: -1,
       });
     }
 
-    // Ánh sáng đèn bập bùng nhẹ
+    // Ánh sáng đèn bập bùng ấm áp
     if (lanternGlowRef.current) {
       gsap.to(lanternGlowRef.current, {
         opacity: 0.85,
-        scale: 1.08,
-        duration: 1.8,
+        scale: 1.1,
+        duration: 2,
         ease: 'power1.inOut',
         yoyo: true,
         repeat: -1,
       });
     }
 
-    // Lá cây lay nhẹ
+    // Lá cây lay nhẹ nhàng
     if (plantRef.current) {
       gsap.to(plantRef.current, {
         rotation: 2.5,
         transformOrigin: 'bottom center',
-        duration: 2.6,
+        duration: 2.8,
         ease: 'sine.inOut',
         yoyo: true,
         repeat: -1,
       });
     }
 
-    // Hạt bụi nắng / đom đóm bay lơ lửng
+    // Hạt bụi nắng hoặc đom đóm bay lượn ngẫu nhiên khắp toàn màn hình
     if (dustParticlesRef.current) {
       const particles = dustParticlesRef.current.children;
       Array.from(particles).forEach((p, idx) => {
         gsap.to(p, {
-          y: `-=${25 + (idx % 20)}`,
-          x: `+=${(idx % 2 === 0 ? 1 : -1) * 15}`,
-          opacity: (idx % 2 === 0 ? 0.8 : 0.2),
-          duration: 3 + (idx % 3),
+          y: `-=${30 + (idx % 25)}`,
+          x: `+=${(idx % 2 === 0 ? 1 : -1) * 20}`,
+          opacity: idx % 2 === 0 ? 0.9 : 0.3,
+          duration: 3.5 + (idx % 4),
           ease: 'sine.inOut',
           yoyo: true,
           repeat: -1,
-          delay: idx * 0.2,
+          delay: idx * 0.15,
         });
       });
     }
   }, []);
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
+    <div className="fixed inset-0 w-full h-full pointer-events-none select-none z-0 overflow-hidden">
       
-      {/* 1. NỀN BẦU TRỜI ĐỔI THEO KHÔNG GIAN QUA KHUNG CỬA SỔ LỚN */}
-      <div className="absolute top-0 inset-x-0 h-[480px] overflow-hidden transition-all duration-1000">
-        
-        {/* Bầu trời: Bình Minh */}
-        {timeOfDay === 'dawn' && (
-          <div className="absolute inset-0 bg-gradient-to-b from-[#2b1055] via-[#7597de] to-[#ffd194] transition-all duration-1000">
-            {/* Mặt trời hồng sớm */}
-            <div className="absolute top-20 right-1/4 w-32 h-32 rounded-full bg-gradient-to-r from-amber-200 to-rose-300 blur-md opacity-80" />
-            <div className="absolute top-28 left-12 text-stone-200/40 text-xs font-serif italic">
-              * Bình minh đang lên trên sân trường Á Châu...
-            </div>
-          </div>
-        )}
-
-        {/* Bầu trời: Ban Ngày */}
-        {timeOfDay === 'day' && (
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0284c7] via-[#38bdf8] to-[#bae6fd] transition-all duration-1000">
-            {/* Mây trắng bồng bềnh */}
-            <div className="absolute top-16 left-1/4 w-48 h-16 bg-white/40 rounded-full blur-xl animate-pulse" />
-            <div className="absolute top-10 right-1/3 w-64 h-20 bg-white/30 rounded-full blur-2xl" />
-            {/* Vệt nắng ấm (God rays) rọi qua cửa sổ */}
-            <div className="absolute -top-10 left-1/3 w-80 h-[500px] bg-gradient-to-b from-amber-100/25 via-amber-200/10 to-transparent transform rotate-12 blur-lg" />
-          </div>
-        )}
-
-        {/* Bầu trời: Hoàng Hôn */}
-        {timeOfDay === 'sunset' && (
-          <div className="absolute inset-0 bg-gradient-to-b from-[#31103f] via-[#c2410c] to-[#f59e0b] transition-all duration-1000">
-            {/* Vầng hoàng hôn đỏ rực */}
-            <div className="absolute top-24 right-1/3 w-36 h-36 rounded-full bg-orange-400 blur-xl opacity-75" />
-            <div className="absolute bottom-10 left-20 text-amber-200/50 text-xs font-serif italic">
-              * Giờ tan trường rực ánh hoàng hôn SIU & IPS...
-            </div>
-          </div>
-        )}
-
-        {/* Bầu trời: Ban Đêm */}
-        {timeOfDay === 'night' && (
-          <div className="absolute inset-0 bg-gradient-to-b from-[#090b14] via-[#0f172a] to-[#1e1b4b] transition-all duration-1000">
-            {/* Vầng trăng khuyết dịu dàng */}
-            <div className="absolute top-12 right-24 w-16 h-16 rounded-full bg-amber-100 shadow-[0_0_35px_rgba(253,230,138,0.8)] opacity-90" />
-            <div className="absolute top-10 right-20 w-16 h-16 rounded-full bg-[#0f172a]" />
-            {/* Ngôi sao lấp lánh */}
-            {[...Array(24)].map((_, i) => (
-              <span
-                key={i}
-                className="absolute text-amber-200 text-[10px] animate-pulse"
-                style={{
-                  top: `${(i * 19) % 70}%`,
-                  left: `${(i * 29) % 95}%`,
-                  animationDuration: `${1.5 + (i % 3)}s`,
-                }}
-              >
-                ✦
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* DÃY KHUNG CỬA SỔ GỖ VÒM TRƯỜNG HỌC (2D Architectural Arched Window) */}
-        <div className="absolute inset-x-0 bottom-0 h-44 flex items-end justify-center gap-8 px-6">
-          <div className="w-64 h-40 rounded-t-full border-t-8 border-x-8 border-wood-950 bg-transparent relative shadow-2xl">
-            <div className="absolute inset-x-0 top-1/2 h-2 bg-wood-950" />
-            <div className="absolute inset-y-0 left-1/2 w-2 bg-wood-950" />
-          </div>
-          <div className="w-80 h-44 rounded-t-full border-t-8 border-x-8 border-wood-950 bg-transparent relative shadow-2xl hidden md:block">
-            <div className="absolute inset-x-0 top-1/2 h-2 bg-wood-950" />
-            <div className="absolute inset-y-0 left-1/2 w-2 bg-wood-950" />
-          </div>
-          <div className="w-64 h-40 rounded-t-full border-t-8 border-x-8 border-wood-950 bg-transparent relative shadow-2xl hidden lg:block">
-            <div className="absolute inset-x-0 top-1/2 h-2 bg-wood-950" />
-            <div className="absolute inset-y-0 left-1/2 w-2 bg-wood-950" />
-          </div>
-        </div>
+      {/* 1. NỀN BẦU TRỜI & KHÔNG GIAN TOÀN DIỆN (FULL-BLEED COHESIVE ATMOSPHERE)
+          Bao phủ 100% màn hình, chuyển màu liền mạch không bị cắt nửa hay đứt đoạn */}
+      
+      {/* KHÔNG GIAN 1: BÌNH MINH (DAWN) */}
+      <div 
+        className={`absolute inset-0 transition-opacity duration-1000 ${
+          timeOfDay === 'dawn' ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-[#2b1236] via-[#52294e] via-[#7d3b48] to-[#1e0d08]" />
+        {/* Vầng hồng bình minh trên cao */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 20%, rgba(251, 146, 60, 0.45) 0%, rgba(244, 63, 94, 0.25) 40%, transparent 75%)',
+          }}
+        />
+        {/* Sương mù sớm */}
+        <div className="absolute top-1/4 inset-x-0 h-48 bg-gradient-to-b from-transparent via-rose-300/10 to-transparent blur-xl" />
       </div>
 
-      {/* 2. TƯỜNG GỖ ẤM CÚNG & SÀN GỖ PARQUET 2D */}
-      <div className="absolute inset-x-0 top-[380px] bottom-0 bg-gradient-to-b from-[#2e1910] via-[#21110a] to-[#120905]">
-        {/* Đường gờ chỉ phào chân tường bằng gỗ lim */}
-        <div className="w-full h-4 bg-[#4a2617] border-y border-amber-600/40 shadow-md" />
+      {/* KHÔNG GIAN 2: BAN NGÀY (DAYLIGHT) - ẤM ÁP, SANG TRỌNG, KHÔNG BỊ XANH GẮT */}
+      <div 
+        className={`absolute inset-0 transition-opacity duration-1000 ${
+          timeOfDay === 'day' ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {/* Chuyển sắc dịu dàng từ bầu trời xanh ngọc qua vệt nắng ấm xuống nền phòng gỗ */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1b3d5e] via-[#27537e] via-[#3d3832] to-[#180d08]" />
         
-        {/* Họa tiết sàn gỗ Parquet trải dài */}
+        {/* Quầng sáng mặt trời rọi qua cửa sổ (Sunlight Core) */}
         <div 
-          className="w-full h-full opacity-35"
+          className="absolute inset-0"
           style={{
-            backgroundImage: `
-              linear-gradient(90deg, rgba(0,0,0,0.4) 1px, transparent 1px),
-              linear-gradient(rgba(0,0,0,0.3) 1px, transparent 1px)
-            `,
-            backgroundSize: '40px 120px',
-            transform: 'perspective(600px) rotateX(25deg)',
-            transformOrigin: 'top center',
+            background: 'radial-gradient(ellipse at 50% 15%, rgba(56, 189, 248, 0.35) 0%, rgba(253, 224, 71, 0.2) 40%, transparent 75%)',
+          }}
+        />
+
+        {/* Các vệt nắng xiên nhẹ nhàng (God Rays) */}
+        <div className="absolute -top-20 left-1/4 w-96 h-[800px] bg-gradient-to-b from-amber-100/20 via-amber-200/5 to-transparent transform rotate-12 blur-2xl" />
+        <div className="absolute -top-20 right-1/4 w-96 h-[800px] bg-gradient-to-b from-amber-100/15 via-amber-200/5 to-transparent transform -rotate-12 blur-2xl" />
+      </div>
+
+      {/* KHÔNG GIAN 3: HOÀNG HÔN (SUNSET) */}
+      <div 
+        className={`absolute inset-0 transition-opacity duration-1000 ${
+          timeOfDay === 'sunset' ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-[#280c3a] via-[#5c1c44] via-[#853328] to-[#1c0d08]" />
+        {/* Vầng hoàng hôn rực rỡ */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 18%, rgba(249, 115, 22, 0.45) 0%, rgba(217, 70, 239, 0.25) 45%, transparent 80%)',
           }}
         />
       </div>
 
-      {/* 3. ĐÈN DẦU ĐỒNG TREO TƯỜNG ĐUNG ĐƯA (GSAP SWING) */}
+      {/* KHÔNG GIAN 4: BAN ĐÊM (NIGHT) */}
+      <div 
+        className={`absolute inset-0 transition-opacity duration-1000 ${
+          timeOfDay === 'night' ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-[#060913] via-[#0c1426] via-[#141b2c] to-[#0d0907]" />
+        {/* Ánh trăng khuyết dịu nhẹ */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at 70% 15%, rgba(147, 197, 253, 0.3) 0%, transparent 60%)',
+          }}
+        />
+        {/* Mặt trăng */}
+        <div className="absolute top-16 right-36 w-14 h-14 rounded-full bg-amber-100/90 shadow-[0_0_40px_rgba(253,230,138,0.7)]" />
+        <div className="absolute top-14 right-32 w-14 h-14 rounded-full bg-[#0c1426]" />
+        
+        {/* Bầu trời ngàn sao lấp lánh */}
+        {[...Array(30)].map((_, i) => (
+          <span
+            key={i}
+            className="absolute text-amber-200 text-[10px] animate-pulse"
+            style={{
+              top: `${(i * 17) % 85}%`,
+              left: `${(i * 23) % 96}%`,
+              animationDuration: `${1.2 + (i % 3)}s`,
+              opacity: 0.3 + ((i % 5) * 0.15),
+            }}
+          >
+            ✦
+          </span>
+        ))}
+      </div>
+
+      {/* 2. HỌA TIẾT KHUNG CỬA SỔ VÒM NGHỆ THUẬT (ARCHED SCHOOL WINDOW SILHOUETTE)
+          Hòa quyện tự nhiên mờ dần vào không gian, không tạo vệt cắt ngang */}
+      <div className="absolute top-0 inset-x-0 h-96 flex items-start justify-center gap-10 px-8 pt-4 opacity-25">
+        <div className="w-60 h-80 rounded-t-full border-4 border-amber-900/60 bg-gradient-to-b from-white/10 to-transparent relative shadow-2xl">
+          <div className="absolute inset-x-0 top-1/2 h-1 bg-amber-900/60" />
+          <div className="absolute inset-y-0 left-1/2 w-1 bg-amber-900/60" />
+        </div>
+        <div className="w-72 h-96 rounded-t-full border-4 border-amber-900/60 bg-gradient-to-b from-white/10 to-transparent relative shadow-2xl hidden md:block">
+          <div className="absolute inset-x-0 top-1/2 h-1 bg-amber-900/60" />
+          <div className="absolute inset-y-0 left-1/2 w-1 bg-amber-900/60" />
+        </div>
+        <div className="w-60 h-80 rounded-t-full border-4 border-amber-900/60 bg-gradient-to-b from-white/10 to-transparent relative shadow-2xl hidden lg:block">
+          <div className="absolute inset-x-0 top-1/2 h-1 bg-amber-900/60" />
+          <div className="absolute inset-y-0 left-1/2 w-1 bg-amber-900/60" />
+        </div>
+      </div>
+
+      {/* 3. XÀ NGANG GỖ MÁI VÒM TRÊN CÙNG (CEILING BEAM) - NƠI TREO ĐÈN */}
+      <div className="absolute top-0 inset-x-0 h-3 bg-gradient-to-b from-[#3a1d10] via-[#2b1308] to-transparent border-b border-amber-800/40 shadow-lg z-10" />
+
+      {/* 4. SÀN GỖ NỀN DƯỚI ĐÁY MỜ DẦN (SEAMLESS FLOOR TEXTURE) */}
+      <div 
+        className="absolute inset-x-0 bottom-0 h-96 opacity-25"
+        style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(245, 158, 11, 0.15) 1px, transparent 1px),
+            linear-gradient(rgba(0, 0, 0, 0.4) 1px, transparent 1px)
+          `,
+          backgroundSize: '45px 120px',
+          transform: 'perspective(500px) rotateX(25deg)',
+          transformOrigin: 'bottom center',
+          maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 40%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 40%, transparent 100%)',
+        }}
+      />
+
+      {/* 5. ĐÈN DẦU ĐỒNG TREO TỪ XÀ TRÊN ĐUNG ĐƯA (GSAP LANTERN) */}
       <div 
         ref={lanternRef}
-        className="absolute top-12 left-12 hidden sm:flex flex-col items-center z-10"
+        className="absolute top-0 left-10 hidden sm:flex flex-col items-center z-20"
       >
-        {/* Dây xích đồng */}
-        <div className="w-1 h-14 bg-gradient-to-b from-stone-500 to-amber-700" />
+        {/* Dây xích đồng buông từ xà trần */}
+        <div className="w-1 h-20 bg-gradient-to-b from-amber-700 via-stone-500 to-amber-800 shadow" />
         
-        {/* Thân đèn lồng đồng */}
-        <div className="relative w-12 h-16 bg-gradient-to-b from-amber-700 via-amber-900 to-stone-900 rounded-2xl border-2 border-amber-500/80 shadow-2xl flex items-center justify-center">
-          {/* Ngọn lửa đèn bập bùng */}
-          <div className="w-4 h-6 rounded-full bg-gradient-to-t from-orange-500 to-amber-200 animate-pulse shadow-[0_0_15px_rgba(245,158,11,1)]" />
+        {/* Thân đèn dầu đồng */}
+        <div className="relative w-12 h-16 bg-gradient-to-b from-[#854d0e] via-[#5c3008] to-[#291203] rounded-2xl border-2 border-amber-400 shadow-2xl flex items-center justify-center">
+          {/* Ngọn lửa bập bùng */}
+          <div className="w-4 h-6 rounded-full bg-gradient-to-t from-orange-500 to-amber-200 animate-pulse shadow-[0_0_20px_rgba(245,158,11,1)]" />
           
-          {/* Ánh sáng tỏa tròn ấm áp */}
+          {/* Vầng sáng vàng ấm lan tỏa */}
           <div 
             ref={lanternGlowRef}
-            className="absolute -inset-10 rounded-full bg-amber-500/20 blur-xl pointer-events-none"
+            className="absolute -inset-14 rounded-full bg-amber-500/25 blur-2xl pointer-events-none"
           />
         </div>
       </div>
 
-      {/* 4. BẢNG GHIM NỈ CỔ ĐIỂN BÊN GÓC PHÒNG (CORK BULLETIN BOARD) */}
-      <div className="absolute top-20 right-6 hidden xl:block w-44 bg-[#6b4728] border-4 border-[#3d2012] rounded-2xl p-2.5 shadow-2xl z-10 transform rotate-1">
-        <div className="w-full h-full bg-[#9c6a38] rounded-xl p-2 border border-[#b88248] text-[10px] text-wood-950 font-serif space-y-1.5 shadow-inner">
+      {/* 6. BẢNG GHIM NỈ CỔ ĐIỂN TREO TƯỜNG (CORK BULLETIN BOARD) */}
+      <div className="absolute top-16 right-6 hidden xl:block w-48 bg-[#4d2c16] border-4 border-[#2b1408] rounded-2xl p-2.5 shadow-2xl z-20 transform rotate-1">
+        <div className="w-full bg-[#875529] rounded-xl p-2.5 border border-[#a86e39] text-[10px] text-wood-950 font-serif space-y-1.5 shadow-inner">
           <div className="flex items-center justify-between border-b border-wood-900/40 pb-1">
             <span className="font-bold text-[9px] uppercase tracking-wider text-red-950">📌 GAIE NOTICES</span>
             <span className="text-red-700 font-bold">♥</span>
@@ -201,28 +235,30 @@ export const RoomEnvironment2D: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. CHẬU CÂY CẢNH GÓC PHÒNG LAY NHẸ (GSAP PLANT) */}
+      {/* 7. CHẬU CÂY CẢNH GHIBLI GÓC PHÒNG (GSAP PLANT) */}
       <div 
         ref={plantRef}
-        className="absolute bottom-6 left-6 hidden lg:flex flex-col items-center z-10"
+        className="absolute bottom-6 left-6 hidden lg:flex flex-col items-center z-20"
       >
-        <span className="text-5xl drop-shadow-xl filter">🌿</span>
-        <div className="w-10 h-10 bg-gradient-to-b from-[#b45309] to-[#78350f] rounded-b-xl border-2 border-[#d97706] shadow-lg mt-[-6px]" />
+        <span className="text-5xl drop-shadow-[0_10px_15px_rgba(0,0,0,0.8)] filter">🌿</span>
+        <div className="w-10 h-10 bg-gradient-to-b from-[#b45309] to-[#78350f] rounded-b-xl border-2 border-[#d97706] shadow-2xl mt-[-6px]" />
       </div>
 
-      {/* 6. HẠT BỤI NẮNG HOẶC ĐOM ĐÓM BAY LƠ LỬNG (GSAP PARTICLES) */}
+      {/* 8. HẠT BỤI NẮNG / ĐOM ĐÓM BAY BỔNG KHẮP KHÔNG GIAN (GSAP PARTICLES) */}
       <div ref={dustParticlesRef} className="absolute inset-0 z-10 pointer-events-none">
-        {[...Array(16)].map((_, i) => (
+        {[...Array(24)].map((_, i) => (
           <div
             key={i}
             className={`absolute rounded-full ${
               timeOfDay === 'night' 
-                ? 'w-2 h-2 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,1)]' 
-                : 'w-1.5 h-1.5 bg-amber-200/60 shadow-[0_0_8px_rgba(253,230,138,0.8)]'
+                ? 'w-2 h-2 bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,1)]' 
+                : timeOfDay === 'sunset'
+                ? 'w-1.5 h-1.5 bg-amber-400 shadow-[0_0_10px_rgba(251,146,60,0.9)]'
+                : 'w-1.5 h-1.5 bg-amber-200/70 shadow-[0_0_8px_rgba(253,230,138,0.8)]'
             }`}
             style={{
-              top: `${15 + (i * 21) % 75}%`,
-              left: `${8 + (i * 27) % 85}%`,
+              top: `${10 + (i * 17) % 82}%`,
+              left: `${5 + (i * 23) % 90}%`,
             }}
           />
         ))}
