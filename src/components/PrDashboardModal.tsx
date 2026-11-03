@@ -33,7 +33,7 @@ export const PrDashboardModal: React.FC = () => {
     e.preventDefault();
     if (!selectedLetter || !replyText.trim()) return;
 
-    replyToLetter(selectedLetter.id, replyText.trim(), responderName);
+    replyToLetter(selectedLetter.id, replyText.trim(), responderName, selectedLetter.lockerId);
     setReplyText('');
     setSelectedLetter(null);
   };

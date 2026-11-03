@@ -9,7 +9,8 @@ import {
   Mail, 
   Home, 
   HeartHandshake,
-  Sliders
+  Sliders,
+  Database
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -26,6 +27,8 @@ export const Navbar: React.FC = () => {
     setVolume,
     setIsQrModalOpen,
     setIsPrModalOpen,
+    setIsSupabaseModalOpen,
+    isCloudConnected,
     letters,
     myLocker
   } = useApp();
@@ -68,7 +71,7 @@ export const Navbar: React.FC = () => {
             onClick={() => setCurrentView('locker-room')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
               currentView === 'locker-room'
-                ? 'bg-amber-800 text-amber-100 shadow-sm border border-amber-600/50'
+                ? 'bg-amber-800 text-amber-100 shadow-sm border border-amber-600/50 font-bold'
                 : 'text-stone-300 hover:text-white hover:bg-wood-800/60'
             }`}
           >
@@ -83,7 +86,7 @@ export const Navbar: React.FC = () => {
             onClick={() => setCurrentView('nghe-ban')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
               currentView === 'nghe-ban'
-                ? 'bg-amber-800 text-amber-100 shadow-sm border border-amber-600/50'
+                ? 'bg-amber-800 text-amber-100 shadow-sm border border-amber-600/50 font-bold'
                 : 'text-stone-300 hover:text-white hover:bg-wood-800/60'
             }`}
           >
@@ -95,7 +98,7 @@ export const Navbar: React.FC = () => {
             onClick={() => setCurrentView('tram-chua-lanh')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
               currentView === 'tram-chua-lanh'
-                ? 'bg-emerald-900/90 text-emerald-100 shadow-sm border border-emerald-600/50'
+                ? 'bg-emerald-900/90 text-emerald-100 shadow-sm border border-emerald-600/50 font-bold'
                 : 'text-stone-300 hover:text-white hover:bg-wood-800/60'
             }`}
           >
@@ -107,6 +110,23 @@ export const Navbar: React.FC = () => {
         {/* TOOLS & CONTROLS */}
         <div className="flex items-center gap-2">
           
+          {/* SUPABASE CLOUD STATUS PILL */}
+          <button
+            onClick={() => setIsSupabaseModalOpen(true)}
+            title="Trạng thái kết nối Supabase Cloud"
+            className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition ${
+              isCloudConnected
+                ? 'bg-emerald-950/80 border-emerald-600/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                : 'bg-amber-950/60 border-amber-700/60 text-amber-300 hover:bg-amber-900/80'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline font-mono text-[11px]">
+              {isCloudConnected ? 'Cloud Online' : 'Kết nối Supabase'}
+            </span>
+            <span className={`w-2 h-2 rounded-full ${isCloudConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-500'}`} />
+          </button>
+
           {/* AUDIO CONTROLS TOGGLE */}
           <div className="relative">
             <button

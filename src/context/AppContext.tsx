@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage, LockerItem, FeedbackLetter, HealingWish } from '../utils/storage';
+import { cloudService } from '../services/cloudService';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { sound } from '../utils/soundEngine';
 
 export type TimeOfDay = 'dawn' | 'day' | 'sunset' | 'night';
@@ -17,7 +19,7 @@ interface AppContextType {
   lockers: LockerItem[];
   myLocker: LockerItem | null;
   recoveryWords: string | null;
-  claimLocker: (lockerId: number, alias: string) => { success: boolean; recoveryWords: string };
+  claimLocker: (lockerId: number, alias: string) => Promise<{ success: boolean; recoveryWords: string }>;
   recoverLocker: (words: string) => boolean;
   selectedLocker: LockerItem | null;
   setSelectedLocker: (locker: LockerItem | null) => void;
@@ -25,13 +27,13 @@ interface AppContextType {
   // Feedback Letters
   letters: FeedbackLetter[];
   myLetters: FeedbackLetter[];
-  sendFeedbackLetter: (data: Omit<FeedbackLetter, 'id' | 'date' | 'status'>) => void;
-  replyToLetter: (letterId: string, replyContent: string, responderName: string) => void;
+  sendFeedbackLetter: (data: Omit<FeedbackLetter, 'id' | 'date' | 'status'>) => Promise<void>;
+  replyToLetter: (letterId: string, replyContent: string, responderName: string, lockerId: number) => Promise<void>;
 
   // Healing Space
   healingWishes: HealingWish[];
-  addWish: (content: string, authorAlias: string, campus: string, tags: string[]) => void;
-  hugWish: (id: string) => void;
+  addWish: (content: string, authorAlias: string, campus: string, tags: string[]) => Promise<void>;
+  hugWish: (id: string, currentHugs: number) => Promise<void>;
   candleWish: (id: string) => void;
   plantWaterCount: number;
   waterPlant: () => void;
@@ -53,10 +55,14 @@ interface AppContextType {
   setIsQrModalOpen: (open: boolean) => void;
   isPrModalOpen: boolean;
   setIsPrModalOpen: (open: boolean) => void;
+  isSupabaseModalOpen: boolean;
+  setIsSupabaseModalOpen: (open: boolean) => void;
+  isCloudConnected: boolean;
 
   // Toast / Status Message
   showToast: (msg: string, type?: 'success' | 'info' | 'warn') => void;
   toast: { msg: string; type: 'success' | 'info' | 'warn' } | null;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -70,6 +76,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [healingWishes, setHealingWishes] = useState<HealingWish[]>([]);
   const [plantWaterCount, setPlantWaterCount] = useState<number>(3);
   const [seasonTheme, setSeasonThemeState] = useState<'tet' | 'xmas' | 'normal'>('tet');
+  const [isCloudConnected, setIsCloudConnected] = useState<boolean>(false);
 
   // Time of Day state: Mặc định tự động theo giờ hệ thống
   const [timeOfDay, setTimeOfDayState] = useState<TimeOfDay>(() => {
@@ -88,6 +95,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Modals
   const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false);
   const [isPrModalOpen, setIsPrModalOpen] = useState<boolean>(false);
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' | 'warn' } | null>(null);
@@ -108,36 +116,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(`Không gian đã chuyển sang: ${labels[t]}`, 'info');
   };
 
-  // Khởi tạo dữ liệu từ Storage
-  useEffect(() => {
-    refreshAllData();
-    setRecoveryWords(storage.getRecoveryWords());
-    setSeasonThemeState(storage.getSeasonTheme());
-    setPlantWaterCount(storage.getPlantWaterCount());
-  }, []);
+  // Nạp dữ liệu đồng bộ (Cloud hoặc Local Storage)
+  const refreshData = async () => {
+    setIsCloudConnected(isSupabaseConfigured());
+    const [cloudLockers, cloudLetters, cloudWishes] = await Promise.all([
+      cloudService.fetchLockers(),
+      cloudService.fetchLetters(),
+      cloudService.fetchWishes(),
+    ]);
 
-  const refreshAllData = () => {
-    const list = storage.getLockers();
-    setLockers(list);
-    setLetters(storage.getLetters());
-    setHealingWishes(storage.getHealingWishes());
+    setLockers(cloudLockers);
+    setLetters(cloudLetters);
+    setHealingWishes(cloudWishes);
 
     const myId = storage.getMyLockerId();
     if (myId) {
-      const my = list.find(l => l.id === myId) || null;
+      const my = cloudLockers.find(l => l.id === myId) || null;
       if (my?.hasUnreadReply) {
         sound.playNotification();
       }
     }
   };
 
+  useEffect(() => {
+    refreshData();
+    setRecoveryWords(storage.getRecoveryWords());
+    setSeasonThemeState(storage.getSeasonTheme());
+    setPlantWaterCount(storage.getPlantWaterCount());
+
+    // Lắng nghe Realtime từ Supabase khi có thay đổi trên bất kỳ máy nào
+    const unsubscribe = cloudService.subscribeRealtime(() => {
+      refreshData();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const myLocker = lockers.find(l => l.isOwnedByMe) || null;
   const myLetters = myLocker ? letters.filter(l => l.lockerId === myLocker.id) : [];
 
-  const claimLocker = (lockerId: number, alias: string) => {
-    const res = storage.claimLocker(lockerId, alias);
+  const claimLocker = async (lockerId: number, alias: string) => {
+    const res = await cloudService.claimLocker(lockerId, alias);
     if (res.success) {
-      refreshAllData();
+      await refreshData();
       setRecoveryWords(res.recoveryWords);
       sound.playLockerOpen();
       showToast(`Đã nhận tủ thành công! Mật mã khẩn cấp của bạn: ${res.recoveryWords}`);
@@ -148,7 +171,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const recoverLocker = (words: string) => {
     const ok = storage.recoverLockerByWords(words);
     if (ok) {
-      refreshAllData();
+      refreshData();
       setRecoveryWords(words);
       sound.playLockerOpen();
       showToast('Đã khôi phục thành công quyền mở tủ của bạn!', 'success');
@@ -158,36 +181,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return false;
   };
 
-  const sendFeedbackLetter = (data: Omit<FeedbackLetter, 'id' | 'date' | 'status'>) => {
-    storage.sendLetter(data);
+  const sendFeedbackLetter = async (data: Omit<FeedbackLetter, 'id' | 'date' | 'status'>) => {
+    await cloudService.sendLetter(data);
     sound.playLetterSend();
-    refreshAllData();
+    await refreshData();
     showToast('Lá thư đã được chim bồ câu chuyển tới Ban PR Nội Bộ!', 'success');
   };
 
-  const replyToLetter = (letterId: string, replyContent: string, responderName: string) => {
-    storage.replyLetter(letterId, replyContent, responderName);
-    refreshAllData();
+  const replyToLetter = async (letterId: string, replyContent: string, responderName: string, lockerId: number) => {
+    await cloudService.replyLetter(letterId, replyContent, responderName, lockerId);
+    await refreshData();
     sound.playNotification();
     showToast('Đã gửi phản hồi thành công vào tủ của nhân viên!', 'success');
   };
 
-  const addWish = (content: string, authorAlias: string, campus: string, tags: string[]) => {
-    storage.addHealingWish(content, authorAlias, campus, tags);
-    refreshAllData();
+  const addWish = async (content: string, authorAlias: string, campus: string, tags: string[]) => {
+    await cloudService.addWish(content, authorAlias, campus, tags);
+    await refreshData();
     sound.playHugChime();
-    showToast('Thông điệp ấm áp của bạn đã được gắn lên Cây Đom Đóm!', 'success');
+    showToast('Thông điệp ấm áp của bạn đã được treo lên Cây Đom Đóm!', 'success');
   };
 
-  const hugWish = (id: string) => {
-    storage.giveHug(id);
-    refreshAllData();
+  const hugWish = async (id: string, currentHugs: number) => {
+    await cloudService.giveHug(id, currentHugs);
+    await refreshData();
     sound.playHugChime();
   };
 
   const candleWish = (id: string) => {
     storage.giveCandle(id);
-    refreshAllData();
+    refreshData();
   };
 
   const waterPlant = () => {
@@ -260,8 +283,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsQrModalOpen,
         isPrModalOpen,
         setIsPrModalOpen,
+        isSupabaseModalOpen,
+        setIsSupabaseModalOpen,
+        isCloudConnected,
         showToast,
         toast,
+        refreshData,
       }}
     >
       {children}

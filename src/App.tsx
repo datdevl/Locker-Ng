@@ -9,10 +9,11 @@ import { NgheBanSection } from './components/NgheBanSection';
 import { TramChuaLanh } from './components/TramChuaLanh';
 import { PrDashboardModal } from './components/PrDashboardModal';
 import { QRCodeModal } from './components/QRCodeModal';
+import { SupabaseConfigModal } from './components/SupabaseConfigModal';
 import { CheckCircle2, Info, AlertTriangle } from 'lucide-react';
 
 export const MainContent: React.FC = () => {
-  const { currentView, toast } = useApp();
+  const { currentView, toast, isSupabaseModalOpen, setIsSupabaseModalOpen, refreshData } = useApp();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#140b07] text-stone-100 relative overflow-x-hidden selection:bg-amber-600 selection:text-white">
@@ -56,6 +57,11 @@ export const MainContent: React.FC = () => {
       <LockerModal />
       <PrDashboardModal />
       <QRCodeModal />
+      <SupabaseConfigModal 
+        isOpen={isSupabaseModalOpen} 
+        onClose={() => setIsSupabaseModalOpen(false)} 
+        onConfigChanged={refreshData} 
+      />
 
       {/* FLOATING TOAST NOTIFICATION */}
       {toast && (

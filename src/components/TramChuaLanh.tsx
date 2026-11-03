@@ -407,7 +407,7 @@ export const TramChuaLanh: React.FC = () => {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => hugWish(wish.id)}
+                      onClick={() => hugWish(wish.id, wish.hugs)}
                       className="px-2.5 py-1 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/60 flex items-center gap-1.5 transition font-semibold"
                     >
                       <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />

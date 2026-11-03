@@ -72,11 +72,11 @@ export const LockerRoom: React.FC = () => {
     setLockedNoticeLocker(locker);
   };
 
-  const handleConfirmClaim = (e: React.FormEvent) => {
+  const handleConfirmClaim = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!claimTarget || !aliasInput.trim()) return;
 
-    const res = claimLocker(claimTarget.id, aliasInput.trim());
+    const res = await claimLocker(claimTarget.id, aliasInput.trim());
     if (res.success) {
       const updated = { ...claimTarget, alias: aliasInput.trim(), isOwnedByMe: true, isVacant: false };
       setClaimTarget(null);
