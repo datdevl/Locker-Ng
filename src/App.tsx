@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { SeasonalDecor } from './components/SeasonalDecor';
+import { RoomEnvironment2D } from './components/RoomEnvironment2D';
 import { LockerRoom } from './components/LockerRoom';
 import { LockerModal } from './components/LockerModal';
 import { NgheBanSection } from './components/NgheBanSection';
@@ -14,26 +15,29 @@ export const MainContent: React.FC = () => {
   const { currentView, toast } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col bg-wood-950 text-stone-100 relative overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-[#140b07] text-stone-100 relative overflow-x-hidden selection:bg-amber-600 selection:text-white">
       
-      {/* TRANG TRÍ MÙA LỄ HỘI ĐỘNG (TẾT / NOEL / TỰU TRƯỜNG) */}
+      {/* 1. BỐI CẢNH PHÒNG GAME 2D VỚI CỬA SỔ BẦU TRỜI ĐỔI THEO KHÔNG GIAN/THỜI GIAN */}
+      <RoomEnvironment2D />
+
+      {/* 2. TRANG TRÍ MÙA LỄ HỘI ĐỘNG (TẾT / NOEL / TỰU TRƯỜNG) */}
       <SeasonalDecor />
 
-      {/* THANH ĐIỀU HƯỚNG CHÍNH */}
+      {/* 3. THANH ĐIỀU HƯỚNG CHÍNH */}
       <Navbar />
 
-      {/* NỘI DUNG CHÍNH THEO TAB ĐIỀU HƯỚNG */}
+      {/* 4. NỘI DUNG CHÍNH THEO TAB ĐIỀU HƯỚNG */}
       <main className="flex-1 relative z-20">
         {currentView === 'locker-room' && <LockerRoom />}
         {currentView === 'nghe-ban' && <NgheBanSection />}
         {currentView === 'tram-chua-lanh' && <TramChuaLanh />}
       </main>
 
-      {/* CHÂN TRANG THƯƠNG HIỆU Á CHÂU */}
-      <footer className="relative z-20 bg-black/60 border-t border-amber-950/80 py-6 px-4 text-center text-xs text-stone-400">
+      {/* 5. CHÂN TRANG THƯƠNG HIỆU Á CHÂU */}
+      <footer className="relative z-20 bg-black/75 border-t border-amber-900/60 py-6 px-4 text-center text-xs text-stone-300 backdrop-blur-md">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="text-left">
-            <p className="font-serif font-bold text-amber-300">
+            <p className="font-serif font-bold text-amber-300 text-sm">
               TẬP ĐOÀN GIÁO DỤC QUỐC TẾ Á CHÂU (GAIE)
             </p>
             <p className="text-[11px] text-stone-400">
@@ -42,8 +46,8 @@ export const MainContent: React.FC = () => {
           </div>
 
           <div className="text-right text-[11px] text-stone-400">
-            <p>Hệ thống Góp Ý Ẩn Danh & Chăm Sóc Sức Khỏe Tinh Thần Nội Bộ</p>
-            <p className="text-amber-500/80">Tương thích 100% GitHub Pages • 0 Đồng Chi Phí Server</p>
+            <p>Hành Lang Locker & Không Gian Chữa Lành Nội Bộ (GSAP Engine)</p>
+            <p className="text-amber-400 font-medium">Tương thích 100% GitHub Pages • 0 Đồng Chi Phí Server</p>
           </div>
         </div>
       </footer>
@@ -55,7 +59,7 @@ export const MainContent: React.FC = () => {
 
       {/* FLOATING TOAST NOTIFICATION */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 bg-stone-900 border-2 border-amber-500/70 text-stone-100 px-5 py-3 rounded-2xl shadow-2xl animate-bounce text-xs font-medium">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 bg-[#2b170e] border-2 border-amber-400 text-amber-100 px-5 py-3 rounded-2xl shadow-2xl animate-bounce text-xs font-bold">
           {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
           {toast.type === 'info' && <Info className="w-4 h-4 text-sky-400 shrink-0" />}
           {toast.type === 'warn' && <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />}

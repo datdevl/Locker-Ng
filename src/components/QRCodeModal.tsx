@@ -1,25 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, Copy, Check, QrCode } from 'lucide-react';
+import QRCode from 'qrcode';
+import { X, Copy, Check, QrCode, Download, ExternalLink, RefreshCw } from 'lucide-react';
 
 export const QRCodeModal: React.FC = () => {
   const { isQrModalOpen, setIsQrModalOpen, showToast } = useApp();
   const [copied, setCopied] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [qrUrl, setQrUrl] = useState<string>(() => {
+    return window.location.href;
+  });
+
+  // Sinh mã QR THẬT 100% bằng thư viện qrcode chuẩn quốc tế
+  useEffect(() => {
+    if (!isQrModalOpen) return;
+
+    QRCode.toDataURL(qrUrl, {
+      width: 300,
+      margin: 2,
+      color: {
+        dark: '#261208', // Màu nâu gỗ sồi truyền thống
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'H',
+    })
+      .then((url) => {
+        setQrDataUrl(url);
+      })
+      .catch((err) => {
+        console.error('Lỗi sinh mã QR:', err);
+      });
+  }, [qrUrl, isQrModalOpen]);
 
   if (!isQrModalOpen) return null;
 
-  const currentUrl = window.location.href;
-
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(currentUrl);
+    navigator.clipboard.writeText(qrUrl);
     setCopied(true);
-    showToast('Đã sao chép liên kết website vào bộ nhớ tạm!', 'success');
+    showToast('Đã sao chép liên kết vào bộ nhớ tạm!', 'success');
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="bg-gradient-to-b from-stone-900 via-stone-950 to-black border-2 border-amber-600/70 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl text-stone-200 relative text-center">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
+      <div className="bg-gradient-to-b from-[#2e180f] via-[#1f0e08] to-black border-2 border-amber-500/80 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-[0_0_50px_rgba(0,0,0,0.9)] text-stone-100 relative text-center">
         
         {/* NÚT ĐÓNG */}
         <button
@@ -29,98 +53,82 @@ export const QRCodeModal: React.FC = () => {
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-12 h-12 rounded-2xl bg-amber-950 border border-amber-500/50 flex items-center justify-center text-amber-300 mx-auto mb-3">
+        <div className="w-12 h-12 rounded-2xl bg-amber-950 border border-amber-500/50 flex items-center justify-center text-amber-300 mx-auto mb-3 shadow-lg">
           <QrCode className="w-6 h-6" />
         </div>
 
         <h3 className="text-xl md:text-2xl font-serif font-bold text-amber-200">
-          Mã QR Truy Cập Nhanh
+          Mã QR Quét Thật 100%
         </h3>
-        <p className="text-xs text-stone-400 mt-1 max-w-xs mx-auto">
-          Quét mã này bằng camera điện thoại để vào thẳng căn phòng Locker cá nhân của bạn mà không cần đăng nhập.
+        <p className="text-xs text-stone-300 mt-1 max-w-xs mx-auto">
+          Dùng camera điện thoại hoặc Zalo quét trực tiếp mã này trên màn hình để vào phòng Locker ngay!
         </p>
 
-        {/* HÌNH MÃ QR THỰC TẾ (SVG ĐỒNG NHẤT KHÔNG CẦN THƯ VIỆN NGOÀI) */}
-        <div className="my-5 p-4 bg-white rounded-2xl inline-block shadow-2xl border-4 border-amber-800">
-          <svg
-            className="w-48 h-48 mx-auto"
-            viewBox="0 0 256 256"
-            shapeRendering="crispEdges"
-          >
-            {/* Background */}
-            <rect width="256" height="256" fill="#ffffff" />
-            
-            {/* Top-Left Finder */}
-            <rect x="20" y="20" width="60" height="60" fill="#000000" />
-            <rect x="28" y="28" width="44" height="44" fill="#ffffff" />
-            <rect x="36" y="36" width="28" height="28" fill="#c0262d" />
-
-            {/* Top-Right Finder */}
-            <rect x="176" y="20" width="60" height="60" fill="#000000" />
-            <rect x="184" y="28" width="44" height="44" fill="#ffffff" />
-            <rect x="192" y="36" width="28" height="28" fill="#c0262d" />
-
-            {/* Bottom-Left Finder */}
-            <rect x="20" y="176" width="60" height="60" fill="#000000" />
-            <rect x="28" y="184" width="44" height="44" fill="#ffffff" />
-            <rect x="36" y="192" width="28" height="28" fill="#c0262d" />
-
-            {/* Center Logo Area: GAIE Logo representation */}
-            <circle cx="128" cy="128" r="28" fill="#6d4532" />
-            <text x="128" y="133" fontSize="11" fontWeight="bold" fill="#eab308" textAnchor="middle" fontFamily="sans-serif">
-              GAIE
-            </text>
-
-            {/* QR Pattern Data Blocks */}
-            <rect x="96" y="28" width="12" height="12" fill="#000000" />
-            <rect x="116" y="28" width="12" height="12" fill="#000000" />
-            <rect x="136" y="28" width="12" height="12" fill="#000000" />
-            <rect x="96" y="48" width="12" height="12" fill="#000000" />
-            <rect x="126" y="48" width="12" height="12" fill="#000000" />
-            <rect x="146" y="48" width="12" height="12" fill="#000000" />
-
-            <rect x="28" y="96" width="12" height="12" fill="#000000" />
-            <rect x="48" y="96" width="12" height="12" fill="#000000" />
-            <rect x="68" y="96" width="12" height="12" fill="#000000" />
-            <rect x="28" y="116" width="12" height="12" fill="#000000" />
-            <rect x="48" y="136" width="12" height="12" fill="#000000" />
-            <rect x="68" y="146" width="12" height="12" fill="#000000" />
-
-            <rect x="176" y="96" width="12" height="12" fill="#000000" />
-            <rect x="196" y="96" width="12" height="12" fill="#000000" />
-            <rect x="216" y="106" width="12" height="12" fill="#000000" />
-            <rect x="176" y="136" width="12" height="12" fill="#000000" />
-            <rect x="206" y="146" width="12" height="12" fill="#000000" />
-
-            <rect x="96" y="176" width="12" height="12" fill="#000000" />
-            <rect x="116" y="176" width="12" height="12" fill="#000000" />
-            <rect x="136" y="186" width="12" height="12" fill="#000000" />
-            <rect x="156" y="196" width="12" height="12" fill="#000000" />
-            <rect x="106" y="216" width="12" height="12" fill="#000000" />
-            <rect x="136" y="216" width="12" height="12" fill="#000000" />
-            <rect x="186" y="186" width="12" height="12" fill="#000000" />
-            <rect x="216" y="206" width="12" height="12" fill="#000000" />
-          </svg>
+        {/* ẢNH MÃ QR THẬT CHUẨN ISO 18004 */}
+        <div className="my-5 p-4 bg-white rounded-2xl inline-block shadow-2xl border-4 border-amber-600/80">
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt="Mã QR Truy Cập Thật"
+              className="w-52 h-52 mx-auto rounded-lg"
+            />
+          ) : (
+            <div className="w-52 h-52 flex items-center justify-center text-xs text-stone-600 font-mono">
+              Đang tạo mã QR...
+            </div>
+          )}
+          <p className="text-[10px] text-stone-500 font-sans mt-1.5 font-bold tracking-wider">
+            ★ TẬP ĐOÀN GIÁO DỤC QUỐC TẾ Á CHÂU ★
+          </p>
         </div>
 
-        {/* LIÊN KẾT & SAO CHÉP */}
-        <div className="bg-stone-900 border border-stone-800 p-2.5 rounded-xl flex items-center justify-between text-xs text-stone-300 mb-4">
-          <span className="truncate max-w-[240px] font-mono text-[11px] text-amber-300">
-            {currentUrl}
-          </span>
+        {/* Ô NHẬP & SAO CHÉP LIÊN KẾT */}
+        <div className="space-y-2 text-left mb-4">
+          <label className="block text-[11px] text-stone-400">
+            Địa chỉ URL được mã hóa vào QR:
+          </label>
+          <div className="bg-black/60 border border-amber-800/60 p-2 rounded-xl flex items-center justify-between text-xs text-stone-300">
+            <input
+              type="text"
+              value={qrUrl}
+              onChange={(e) => setQrUrl(e.target.value)}
+              className="w-full bg-transparent text-amber-300 font-mono text-[11px] focus:outline-none pr-2"
+            />
+            <button
+              onClick={handleCopyLink}
+              className="flex items-center gap-1 bg-amber-700 hover:bg-amber-600 text-wood-950 px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Đã chép' : 'Chép'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* CÁC NÚT THAO TÁC: TẢI ẢNH QR VỀ IN */}
+        <div className="flex gap-2">
+          {qrDataUrl && (
+            <a
+              href={qrDataUrl}
+              download="Ma-QR-Locker-GAIE.png"
+              className="flex-1 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-wood-950 font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-1.5"
+            >
+              <Download className="w-4 h-4" />
+              <span>Tải Ảnh QR Về Để In</span>
+            </a>
+          )}
           <button
-            onClick={handleCopyLink}
-            className="flex items-center gap-1 bg-amber-800 hover:bg-amber-700 text-amber-100 px-2.5 py-1 rounded-lg text-xs font-semibold transition shrink-0"
+            onClick={() => setQrUrl(window.location.href)}
+            title="Lấy lại URL hiện tại"
+            className="p-2.5 bg-[#3a1d11] hover:bg-[#4a2617] border border-amber-600/50 rounded-xl text-amber-300 transition"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Đã chép' : 'Sao chép'}</span>
+            <RefreshCw className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="text-[11px] text-stone-400 space-y-1 text-left bg-stone-900/60 p-3 rounded-xl border border-stone-800">
-          <p className="font-semibold text-amber-300">💡 Ứng dụng thực tế tại trường:</p>
-          <p>- In mã QR này dán tại bảng tin nội bộ, phòng sinh hoạt giáo viên IPS & SIU.</p>
-          <p>- Nhân viên quét mã là tự nhận diện đúng tủ cá nhân của mình trên điện thoại.</p>
+        <div className="text-[11px] text-stone-400 space-y-1 text-left bg-black/40 p-3 rounded-xl border border-stone-800 mt-4">
+          <p className="font-semibold text-amber-300">💡 Lưu ý khi đưa vào vận hành:</p>
+          <p>- Khi bạn đẩy lên GitHub Pages (`https://...`), mã QR sẽ tự động khớp với đường dẫn web của trường.</p>
+          <p>- In mã này dán tại bảng tin giáo viên IPS & SIU để nhân viên quét vào trải nghiệm!</p>
         </div>
 
       </div>

@@ -2,10 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage, LockerItem, FeedbackLetter, HealingWish } from '../utils/storage';
 import { sound } from '../utils/soundEngine';
 
+export type TimeOfDay = 'dawn' | 'day' | 'sunset' | 'night';
+
 interface AppContextType {
   // Navigation & View
   currentView: 'locker-room' | 'nghe-ban' | 'tram-chua-lanh';
   setCurrentView: (view: 'locker-room' | 'nghe-ban' | 'tram-chua-lanh') => void;
+
+  // Time & Space Environment (Bối cảnh không gian & thời gian 2D)
+  timeOfDay: TimeOfDay;
+  setTimeOfDay: (time: TimeOfDay) => void;
 
   // Lockers
   lockers: LockerItem[];
@@ -65,6 +71,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [plantWaterCount, setPlantWaterCount] = useState<number>(3);
   const [seasonTheme, setSeasonThemeState] = useState<'tet' | 'xmas' | 'normal'>('tet');
 
+  // Time of Day state: Mặc định tự động theo giờ hệ thống
+  const [timeOfDay, setTimeOfDayState] = useState<TimeOfDay>(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 9) return 'dawn';
+    if (hour >= 9 && hour < 17) return 'day';
+    if (hour >= 17 && hour < 19) return 'sunset';
+    return 'night';
+  });
+
   // Audio
   const [isRainActive, setIsRainActive] = useState<boolean>(false);
   const [isLofiActive, setIsLofiActive] = useState<boolean>(false);
@@ -80,6 +95,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const showToast = (msg: string, type: 'success' | 'info' | 'warn' = 'success') => {
     setToast({ msg, type });
     window.setTimeout(() => setToast(null), 4000);
+  };
+
+  const setTimeOfDay = (t: TimeOfDay) => {
+    setTimeOfDayState(t);
+    const labels = {
+      dawn: 'Bình Minh Ấm Áp 🌅',
+      day: 'Ban Ngày Nắng Sân Trường ☀️',
+      sunset: 'Hoàng Hôn Trầm Lắng 🌇',
+      night: 'Đêm Ngàn Sao & Đèn Dầu 🌙'
+    };
+    showToast(`Không gian đã chuyển sang: ${labels[t]}`, 'info');
   };
 
   // Khởi tạo dữ liệu từ Storage
@@ -203,6 +229,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         currentView,
         setCurrentView,
+        timeOfDay,
+        setTimeOfDay,
         lockers,
         myLocker,
         recoveryWords,

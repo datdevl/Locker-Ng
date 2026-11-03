@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import confetti from 'canvas-confetti';
+import gsap from 'gsap';
 import { 
   Send, 
   ArrowLeft, 
@@ -27,6 +28,9 @@ export const NgheBanSection: React.FC = () => {
   const [content, setContent] = useState('');
   const [isSending, setIsSending] = useState(false);
 
+  const paperRef = useRef<HTMLDivElement>(null);
+  const pigeonRef = useRef<HTMLDivElement>(null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
@@ -38,12 +42,45 @@ export const NgheBanSection: React.FC = () => {
 
     setIsSending(true);
 
-    // Bắn hiệu ứng chim bồ câu / lông vũ
+    // GSAP ANIMATION: GẤP THƯ & CHIM BỒ CÂU BAY VÚT QUA CỬA SỔ
+    if (paperRef.current && pigeonRef.current) {
+      const tl = gsap.timeline();
+
+      // Cuộn tròn bức thư lại
+      tl.to(paperRef.current, {
+        scale: 0.7,
+        rotation: 4,
+        duration: 0.3,
+        ease: 'power2.inOut',
+      });
+
+      // Xuất hiện chim bồ câu trắng
+      tl.set(pigeonRef.current, { opacity: 1, scale: 0.5, x: 0, y: 0 });
+
+      // Chim vỗ cánh bay lượn theo đường cong hình sin bay vút lên góc phải màn hình
+      tl.to(pigeonRef.current, {
+        x: 450,
+        y: -350,
+        scale: 1.5,
+        rotation: 20,
+        duration: 1.2,
+        ease: 'power1.in',
+      });
+
+      // Mờ dần bức thư gốc
+      tl.to(paperRef.current, {
+        opacity: 0,
+        y: -150,
+        duration: 0.5,
+      }, '<0.2');
+    }
+
+    // Bắn hiệu ứng lông vũ & ánh sáng
     confetti({
-      particleCount: 40,
-      spread: 70,
-      origin: { y: 0.7 },
-      colors: ['#fef3c7', '#ca8a04', '#eab308']
+      particleCount: 50,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ['#fef3c7', '#ca8a04', '#eab308', '#ffffff']
     });
 
     sendFeedbackLetter({
@@ -60,29 +97,43 @@ export const NgheBanSection: React.FC = () => {
       setIsSending(false);
       setTitle('');
       setContent('');
+      if (paperRef.current) {
+        gsap.set(paperRef.current, { scale: 1, rotation: 0, opacity: 1, y: 0 });
+      }
+      if (pigeonRef.current) {
+        gsap.set(pigeonRef.current, { opacity: 0 });
+      }
       setActiveTab('inbox');
-    }, 600);
+    }, 1300);
   };
 
   return (
-    <div className="min-h-[calc(100vh-70px)] bg-gradient-to-b from-wood-950 via-[#23150e] to-[#1a0e09] p-4 md:p-8 flex flex-col items-center">
+    <div className="relative min-h-[calc(100vh-70px)] p-4 md:p-8 flex flex-col items-center z-10">
       
+      {/* CHIM BỒ CÂU GSAP BAY (ẨN MẶC ĐỊNH) */}
+      <div 
+        ref={pigeonRef}
+        className="fixed z-50 pointer-events-none opacity-0 text-5xl filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
+      >
+        🕊️
+      </div>
+
       {/* HEADER & QUAY LẠI */}
       <div className="max-w-4xl w-full flex items-center justify-between mb-6">
         <button
           onClick={() => setCurrentView('locker-room')}
-          className="flex items-center gap-2 text-xs md:text-sm text-amber-300 hover:text-amber-100 bg-wood-900/80 border border-amber-800/60 px-3.5 py-1.5 rounded-xl transition"
+          className="flex items-center gap-2 text-xs md:text-sm text-amber-200 hover:text-white bg-black/60 border border-amber-600/60 px-4 py-2 rounded-2xl transition shadow-lg backdrop-blur-md"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Quay lại Phòng Locker</span>
         </button>
 
-        <div className="flex gap-2 bg-wood-900/90 p-1 rounded-xl border border-amber-900/60">
+        <div className="flex gap-2 bg-black/60 backdrop-blur-md p-1.5 rounded-2xl border border-amber-800/60 shadow-lg">
           <button
             onClick={() => setActiveTab('compose')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
               activeTab === 'compose'
-                ? 'bg-amber-800 text-amber-100 shadow-sm border border-amber-600/50'
+                ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-wood-950 shadow-md border border-amber-400'
                 : 'text-stone-300 hover:text-white'
             }`}
           >
@@ -92,9 +143,9 @@ export const NgheBanSection: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('inbox')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
               activeTab === 'inbox'
-                ? 'bg-amber-800 text-amber-100 shadow-sm border border-amber-600/50'
+                ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-wood-950 shadow-md border border-amber-400'
                 : 'text-stone-300 hover:text-white'
             }`}
           >
@@ -104,13 +155,16 @@ export const NgheBanSection: React.FC = () => {
         </div>
       </div>
 
-      {/* VIEW 1: SOẠN THƯ TAY TRÊN GIẤY DA CỔ ĐIỂN */}
+      {/* VIEW 1: SOẠN THƯ TAY TRÊN GIẤY DA CỔ ĐIỂN VỚI GSAP ANIMATION */}
       {activeTab === 'compose' && (
-        <div className="max-w-3xl w-full parchment-paper text-stone-900 p-6 md:p-10 rounded-3xl border-4 border-amber-700/60 shadow-2xl relative">
+        <div 
+          ref={paperRef}
+          className="max-w-3xl w-full parchment-paper text-stone-900 p-6 md:p-10 rounded-3xl border-4 border-amber-700/60 shadow-2xl relative"
+        >
           
           {/* Con dấu sáp đỏ Á Châu */}
-          <div className="absolute top-6 right-6 hidden sm:flex flex-col items-center opacity-85">
-            <div className="w-16 h-16 rounded-full bg-red-700 border-2 border-red-900 flex items-center justify-center shadow-lg transform rotate-12">
+          <div className="absolute top-6 right-6 hidden sm:flex flex-col items-center opacity-90">
+            <div className="w-16 h-16 rounded-full bg-red-700 border-2 border-red-900 flex items-center justify-center shadow-xl transform rotate-12">
               <span className="text-[10px] font-bold text-amber-200 text-center leading-tight">
                 GAIE<br/>BẢO MẬT
               </span>
@@ -118,7 +172,7 @@ export const NgheBanSection: React.FC = () => {
           </div>
 
           <div className="mb-6">
-            <span className="text-xs font-mono text-amber-800 uppercase tracking-widest font-bold">
+            <span className="text-xs font-mono text-amber-900 uppercase tracking-widest font-black">
               KÊNH GÓP Ý NỘI BỘ • TRƯỜNG QUỐC TẾ Á CHÂU & SIU
             </span>
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-amber-950 mt-1">
@@ -129,7 +183,7 @@ export const NgheBanSection: React.FC = () => {
             </p>
             {myLocker ? (
               <p className="text-xs text-amber-900 mt-1 font-semibold">
-                👤 Đang gửi dưới danh nghĩa: <span className="underline">{myLocker.alias}</span> (#{myLocker.number})
+                👤 Đang gửi dưới danh nghĩa: <span className="underline font-bold">{myLocker.alias}</span> (#{myLocker.number})
               </p>
             ) : (
               <p className="text-xs text-red-700 mt-1 font-semibold">
@@ -203,8 +257,8 @@ export const NgheBanSection: React.FC = () => {
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <span className="text-[11px] text-stone-700 italic flex items-center gap-1">
-                🕊️ Sau khi gửi, chim bồ câu sẽ bay tới Dashboard Ban PR Nội Bộ.
+              <span className="text-[11px] text-stone-700 italic flex items-center gap-1 font-serif">
+                🕊️ Sau khi gửi, chim bồ câu sẽ bay qua cửa sổ tới Dashboard Ban PR Nội Bộ.
               </span>
 
               <button
@@ -224,7 +278,7 @@ export const NgheBanSection: React.FC = () => {
       {/* VIEW 2: HÒM THƯ ĐÃ GỬI & XEM PHẢN HỒI HAI CHIỀU */}
       {activeTab === 'inbox' && (
         <div className="max-w-3xl w-full space-y-4">
-          <div className="bg-wood-900/80 border border-amber-800/60 p-4 rounded-2xl flex items-center justify-between text-stone-200">
+          <div className="bg-[#2a140b]/80 border border-amber-700/60 p-4 rounded-2xl flex items-center justify-between text-stone-200 backdrop-blur-md shadow-xl">
             <div>
               <h3 className="font-serif font-bold text-amber-200 text-sm">
                 Danh Sách Thư Của Tủ #{myLocker?.number || 'Ẩn danh'}
@@ -235,24 +289,24 @@ export const NgheBanSection: React.FC = () => {
             </div>
             <button
               onClick={() => setActiveTab('compose')}
-              className="text-xs bg-amber-700 hover:bg-amber-600 text-white font-semibold px-3 py-1.5 rounded-xl transition"
+              className="text-xs bg-amber-600 hover:bg-amber-500 text-wood-950 font-bold px-3.5 py-2 rounded-xl transition shadow-lg"
             >
               + Viết Thư Mới
             </button>
           </div>
 
           {myLetters.length === 0 ? (
-            <div className="text-center py-12 bg-wood-950/60 rounded-3xl border border-amber-950 p-6">
+            <div className="text-center py-12 bg-black/50 rounded-3xl border border-amber-950 p-6 backdrop-blur-md">
               <span className="text-4xl">📭</span>
-              <p className="text-sm font-serif text-amber-200 mt-2">
+              <p className="text-sm font-serif text-amber-200 mt-2 font-bold">
                 Bạn chưa gửi lá thư nào!
               </p>
-              <p className="text-xs text-stone-400 mt-1 max-w-sm mx-auto">
+              <p className="text-xs text-stone-300 mt-1 max-w-sm mx-auto">
                 Khi bạn gửi một tâm tư hoặc đề xuất, toàn bộ quá trình xử lý và hồi âm sẽ được lưu an toàn tại đây.
               </p>
               <button
                 onClick={() => setActiveTab('compose')}
-                className="mt-4 px-4 py-2 bg-amber-800 text-amber-100 text-xs rounded-xl hover:bg-amber-700 transition"
+                className="mt-4 px-4 py-2 bg-amber-700 text-amber-100 text-xs font-semibold rounded-xl hover:bg-amber-600 transition"
               >
                 Gửi lá thư đầu tiên ngay
               </button>
@@ -261,11 +315,11 @@ export const NgheBanSection: React.FC = () => {
             myLetters.map((letter) => (
               <div
                 key={letter.id}
-                className="bg-wood-950/80 border-2 border-amber-900/60 hover:border-amber-700/80 rounded-2xl p-5 text-stone-200 shadow-xl transition"
+                className="bg-[#2d180f]/90 border-2 border-amber-800/60 hover:border-amber-600 rounded-2xl p-5 text-stone-200 shadow-xl transition backdrop-blur-md"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-900/40 pb-2.5 mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono bg-black/40 text-amber-400 px-2 py-0.5 rounded border border-amber-800/40">
+                    <span className="text-xs font-mono bg-black/60 text-amber-300 px-2 py-0.5 rounded border border-amber-800/40">
                       Mã: {letter.id}
                     </span>
                     <span className="text-xs bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-800/40">
